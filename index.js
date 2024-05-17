@@ -56,8 +56,8 @@ app.listen(port, () => {
   console.log(`server  is running ${port}`);
 });
 
-// const uri = "mongodb://localhost:27017";
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ykkxidd.mongodb.net/?retryWrites=true&w=majority`;
+const uri = "mongodb://localhost:27017";
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ykkxidd.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -97,6 +97,27 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/product", async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      console.log(page, size);
+      const cursor = serviceCollection.find()      
+      .skip(page * size)
+      .limit(size)
+      .toArray();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // pagenation api genaret
+    app.get('/productsCount', async(req, res) => {
+      const count = await serviceCollection.estimatedDocumentCount();
+      res.send({count})
+    })
+
+
+
+
     // get data from mongoDB
     app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
@@ -110,6 +131,7 @@ async function run() {
 
     // get data to mongoDB
     app.get("/bookings", verifyToken, async (req, res) => {
+
       console.log(req.query.email);
       console.log("token owner info", req.user);
 
